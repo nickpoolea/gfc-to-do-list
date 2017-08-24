@@ -33,6 +33,7 @@ public class ToDoListController {
         ModelAndView mv = new ModelAndView("todo/default");
         List<ToDoItem> items = repository.getAll();
         mv.addObject("toDoItems", items);
+        
         mv.addObject("hasToDoItems", !items.isEmpty());
         return mv;
     }

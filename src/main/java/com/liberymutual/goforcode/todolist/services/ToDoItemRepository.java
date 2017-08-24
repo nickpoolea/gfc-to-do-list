@@ -1,13 +1,8 @@
 // ToDoItemRepository.java
 package com.liberymutual.goforcode.todolist.services;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.io.*;
+import java.util.*;
 
 import org.apache.commons.csv.*;
 import org.springframework.stereotype.Service;
@@ -19,23 +14,40 @@ public class ToDoItemRepository {
 
     private int nextId = 1;
     CSVFormat csvFormat = CSVFormat.DEFAULT;
-
-
+    List<ToDoItem> toDos;
     /**
      * Get all the items from the file. 
      * @return A list of the items. If no items exist, returns an empty list.
      */
     public List<ToDoItem> getAll() {
         
-		try (CSVParser csvParser = CSVParser.parse("to-do.csv", csvFormat)) {
+        toDos = new ArrayList<ToDoItem>();
+    	
+		try (FileReader fileReader = new FileReader("todo.csv");
+			 CSVParser csvParser = new CSVParser(fileReader, csvFormat)) {
+			
 			for (CSVRecord csvRecord : csvParser) {
-	    		System.out.println(csvRecord);
+				
+				ToDoItem toDoToAdd = new ToDoItem();
+	    		toDoToAdd.setId(Integer.parseInt(csvRecord.get(0)));
+	    		toDoToAdd.setText(csvRecord.get(1));
+	    		toDoToAdd.setComplete(Boolean.valueOf(csvRecord.get(2)));
+	    		toDos.add(toDoToAdd);
+	    		
+	    		
 	    	 }
+			
 		} catch (IOException e) {
-	
+			System.out.print("Could not read the file.");
+        }
+		
+		for (ToDoItem td: toDos) {
+			System.out.println(td.getText());
 		}
-    	 
-        return Collections.emptyList();
+		
+		nextId = toDos.size() + 1;
+		return toDos;
+        //return Collections.emptyList();
     }
     /**
      * Assigns a new id to the ToDoItem and saves it to the file.
@@ -46,12 +58,17 @@ public class ToDoItemRepository {
         nextId += 1;
         item.setComplete(false);
         
-        
         ArrayList<String[]> data = new ArrayList<String[]>() ;
-        data.add(new String[] {String.valueOf(item.getId()), 
-        					   item.getText(), 
-        					   String.valueOf(item.getIsIncomplete())});
-        System.out.println(data);
+        
+        for (ToDoItem td: toDos) {
+        	data.add(new String[] {String.valueOf(td.getId()), 
+        						   td.getText(), 
+            					   String.valueOf(td.isComplete())});
+        }
+        
+	        data.add(new String[] {String.valueOf(item.getId()), 
+	        					   item.getText(), 
+	        					   String.valueOf(item.isComplete())});
         
     	try (FileWriter fileWriter = new FileWriter("todo.csv");
 			 CSVPrinter csvPrinter = new CSVPrinter(fileWriter, csvFormat)) {
@@ -70,8 +87,13 @@ public class ToDoItemRepository {
      * @return The ToDoItem with the specified id or null if none is found.
      */
     public ToDoItem getById(int id) {
-        // Replace this with something meaningful
-        return null;
+    	ToDoItem toDoToReturn = null;
+        for (ToDoItem td: toDos) {
+        	if (td.getId() == id) {
+        		toDoToReturn = td;
+        	}
+        }
+        return toDoToReturn;
     }
 
     /**
@@ -79,7 +101,29 @@ public class ToDoItemRepository {
      * @param item The item to update.
      */
     public void update(ToDoItem item) {
-        // Fill this in with something meaningful
+    	
+    	for (ToDoItem td: toDos) {
+    		if (td.getId() == item.getId()) {
+    			toDos.get(td.getId()-1).setComplete(item.isComplete());
+    		}
+    	}
+    	
+    	ArrayList<String[]> data = new ArrayList<String[]>() ;
+        
+        for (ToDoItem td: toDos) {
+        	data.add(new String[] {String.valueOf(td.getId()), 
+        						   td.getText(), 
+            					   String.valueOf(td.isComplete())});
+        }
+        
+    	try (FileWriter fileWriter = new FileWriter("todo.csv");
+			 CSVPrinter csvPrinter = new CSVPrinter(fileWriter, csvFormat)) {
+				csvPrinter.printRecords(data);
+		        csvPrinter.close();
+		} catch (IOException e) {
+			System.out.println("Error rading the file");
+		}
+    	
     }
 
 }
