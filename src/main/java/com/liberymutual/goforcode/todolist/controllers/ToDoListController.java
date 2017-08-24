@@ -40,6 +40,7 @@ public class ToDoListController {
     @PostMapping("todos")
     public String create(ToDoItem item) {
         repository.create(item);
+        System.out.println(item.getId());
         return "redirect:/todos";
     }
 
